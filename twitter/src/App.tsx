@@ -82,7 +82,7 @@ const isError = input === ''
         </Text>
         <Button onClick={onOpen} mt="30">投稿を見る</Button>
       </Box>
-      <FormControl isInvalid={isError}>
+  <FormControl isInvalid={isError}>
   <FormLabel>投稿</FormLabel>
   <Input type='text' value={input} onChange={handleChange} />
   <Button type="submit" onClick={handleSubmit} mt="30">Submit</Button>

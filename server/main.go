@@ -3,14 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
-
+    "fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Post struct {
-	ID      string `json:"id"`
 	Content string `json:"content"`
 }
 
@@ -24,13 +22,20 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO posts VALUES (?, ?)", newPost.ID, newPost.Content)
+	insert, err := db.Exec("INSERT INTO posts(Content) VALUES (?)", newPost.Content)
+	fmt.Println("log",newPost.Content)
 	if err != nil {
 		panic(err.Error())
 	}
-	defer insert.Close()
+	affected, err := insert.RowsAffected()
+if err != nil {
+	panic(err.Error())
+}
+fmt.Println("Inserted post. Rows affected:", affected)
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(newPost)
+
 }
 
 func main() {
