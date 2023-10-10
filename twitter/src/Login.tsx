@@ -35,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
           navigate('/mypage');
         }
       } catch (error) {
-       console.log(error);
+       console.log("niko",error);
       }
       setEmail('');
       setPassword('');
