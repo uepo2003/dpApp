@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/gorilla/sessions"
+	"github.com/google/uuid"
 )
 
 type Post struct {
@@ -15,6 +16,7 @@ type Post struct {
 }
 
 type SignUp struct {
+	ID       string `json:"id"`
 	Email string `json:"email"`
 	Password string `json:"password"`
 
@@ -28,6 +30,10 @@ type User struct {
 
 
 func createSignUp(w http.ResponseWriter, r *http.Request) {
+
+w.Header().Set("Access-Control-Allow-Headers", "*")
+w.Header().Set("Access-Control-Allow-Origin", "*")
+w.Header().Set( "Access-Control-Allow-Methods","GET, POST, PUT, DELETE, OPTIONS" )
 	var newSignUp SignUp
 	json.NewDecoder(r.Body).Decode(&newSignUp)
     
@@ -36,30 +42,27 @@ func createSignUp(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	newSignUp.Password = string(hashedPassword)
-
+    newSignUp.ID = uuid.New().String()
 	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer db.Close()
 
-	insert, err := db.Exec("INSERT INTO signups(Email, Password) VALUES (?,?)", newSignUp.Email, newSignUp.Password)
+	insert, err := db.Exec("INSERT INTO signups(ID, Email, Password) VALUES (?,?,?)",  newSignUp.ID, newSignUp.Email, newSignUp.Password)
 	fmt.Println("log",newSignUp.Email, newSignUp.Password)
 	if err != nil {
 		panic(err.Error())
 	}
 	affected, err := insert.RowsAffected()
-if err != nil {
-	panic(err.Error())
-}
-fmt.Println("Inserted post. Rows affected:", affected)
+    if err != nil {
+	  panic(err.Error())
+    }
+    fmt.Println("Inserted post. Rows affected:", affected)
 
-w.Header().Set("Access-Control-Allow-Headers", "*")
-w.Header().Set("Access-Control-Allow-Origin", "*")
-w.Header().Set( "Access-Control-Allow-Methods","GET, POST, PUT, DELETE, OPTIONS" )
-	json.NewEncoder(w).Encode(newSignUp)
+	  json.NewEncoder(w).Encode(newSignUp)
 
-}
+    }
 
 func createPost(w http.ResponseWriter, r *http.Request) {
 	var newPost Post
