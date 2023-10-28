@@ -1,6 +1,6 @@
 import "./App.css";
 import { Box, Flex, Button, IconButton, Image } from "@chakra-ui/react";
-import { PhoneIcon, AddIcon, WarningIcon } from "@chakra-ui/icons";
+import { PhoneIcon, AddIcon, WarningIcon, EmailIcon  } from "@chakra-ui/icons";
 import {
   Card,
   CardHeader,
@@ -34,12 +34,17 @@ import {
   FormLabel,
   FormHelperText,
   FormErrorMessage,
-  Input,
+  Input
 } from "@chakra-ui/react";
-import { Link } from "@chakra-ui/react";
+import Other from "./Other";
+import { Link,Divider } from "@chakra-ui/react";
+
 import { useState } from "react";
 import axios from "axios";
-function Home() {
+
+import { FollowProps } from "./components/Id";
+
+const Home: React.FC<FollowProps> = ({ user }) =>{
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [input, setInput] = useState("");
@@ -53,6 +58,9 @@ function Home() {
     await axios.post("http://localhost:8080/posts", post);
     setInput("");
   };
+
+
+
 
   const isError = input === "";
   return (
@@ -100,27 +108,27 @@ function Home() {
               　　　　　
             </Button>
             <Button colorScheme="twitter" size="lg" mt="30">
-              　　　　 <Link href="/Login">Login</Link>
-              　　　　　
+              　　　　 <Link href="/Login">Login</Link>　　　　　
             </Button>
           </Flex>
         </Box>
+        
         <Card w="1000px">
           <CardHeader>
             <Heading size="md">Home</Heading>
           </CardHeader>
-
           <CardBody>
             <Tabs variant="soft-rounded" colorScheme="twitter">
               <TabList>
                 <Tab>自分の投稿</Tab>
                 <Tab>みんなの投稿</Tab>
               </TabList>
-              <TabPanels>
+              <Divider orientation='horizontal' mt="2" />
+              <TabPanels　style={{ overflow: 'scroll', maxHeight: '1000px'  }}>
                 <TabPanel>
                   <Stack divider={<StackDivider />} spacing="10">
+                    <Other user={user} />
                     <Box>
-                      　
                       <Image
                         src="https://bit.ly/dan-abramov"
                         alt="Dan Abramov"
@@ -220,6 +228,10 @@ function Home() {
           <Wrap direction="column" align="start" spacing="5" ml="2">
             <WrapItem>
               <Avatar name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+              <Box fontSize="20px" color="black" mt="3" ml="2">niko</Box>
+              <Button leftIcon={<EmailIcon />} colorScheme='twitter' variant='solid' mt="2" ml="2">
+                follow
+              </Button>
             </WrapItem>
             <WrapItem>
               <Avatar

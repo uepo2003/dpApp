@@ -8,19 +8,18 @@ import {
   Heading,
   Text,
   IconButton,
-  BiLike,
-  BiChat,
-  BiShare,
-  BsThreeDotsVertical,
   CardBody,
   Image,
   CardFooter,
 } from "@chakra-ui/react";
+import FollowButton from './components/Follow';
+import { PhoneIcon, AddIcon } from "@chakra-ui/icons";
 
-import { PhoneIcon, AddIcon, WarningIcon } from "@chakra-ui/icons";
-function Other() {
+import { FollowProps } from "./components/Id";
+const Other: React.FC<FollowProps> = ({ user }) => {
   return (
     <>
+    <Flex justify="center" align="center" h="100vh">
       <Card maxW="md">
         <CardHeader>
           <Flex spacing="4">
@@ -63,7 +62,7 @@ function Other() {
           }}
         >
           <Button flex="1" variant="ghost" leftIcon={<AddIcon />}>
-            Like
+          <FollowButton user={user} />
           </Button>
           <Button flex="1" variant="ghost" leftIcon={<AddIcon />}>
             Comment
@@ -73,6 +72,7 @@ function Other() {
           </Button>
         </CardFooter>
       </Card>
+      </Flex>
     </>
   );
 }

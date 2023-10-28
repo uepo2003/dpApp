@@ -4,6 +4,7 @@ import SignUp from "./SignUp";
 import Login from "./Login";
 import MyPage from "./Mypage";
 import Other from "./Other";
+
 function App() {
   return (
     <BrowserRouter>
@@ -13,6 +14,7 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/Other" element={<Other />} />
+    
       </Routes>
     </BrowserRouter>
   );

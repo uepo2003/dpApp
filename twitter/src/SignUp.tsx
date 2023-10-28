@@ -23,16 +23,23 @@ function SignUp() {
     setPassword(event.target.value);
   };
 
-  const SignUp = async () => {
+  const newSignUp = async () => {
     const signup = { email, password };
-    await axios.post("http://localhost:8080/signups", signup);
-    setEmail("");
-    setPassword("");
+    console.log(signup);
+    try {
+      const response = await axios.post("http://localhost:8080/signups", signup);
+      if (response.status === 200) {
+        console.log("seiko");
+        setEmail("");
+        setPassword("");
+      }
+    } catch (error) {
+      console.log("niko", error);
+    }
   };
 
   return (
     <>
-      　　{" "}
       <Box
         rounded={"lg"}
         bg={useColorModeValue("white", "gray.700")}
@@ -59,8 +66,7 @@ function SignUp() {
             bg={"blue.400"}
             color={"white"}
             _hover={{ bg: "blue.500" }}
-            type="submit"
-            onClick={SignUp}
+            onClick={newSignUp}
             mt="30"
           >
             登録する
