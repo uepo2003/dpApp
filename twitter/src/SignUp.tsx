@@ -16,16 +16,11 @@ function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleEmail = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-  };
-  const handlePassword = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(event.target.value);
-  };
-
+  
   const newSignUp = async () => {
+    console.log( email, password );
     const signup = { email, password };
-    console.log(signup);
+   
     try {
       const response = await axios.post("http://localhost:8080/signups", signup);
       if (response.status === 200) {
@@ -55,11 +50,11 @@ function SignUp() {
           </Heading>
           <FormControl id="email">
             <FormLabel>メールアドレス</FormLabel>
-            <Input type="email" value={email} onChange={handleEmail} />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </FormControl>
           <FormControl id="password">
             <FormLabel>パスワード</FormLabel>
-            <Input type="password" value={password} onChange={handlePassword} />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </FormControl>
 
           <Button
