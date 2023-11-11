@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "data": {
+        "contents_checksum": "1f803ad023f10f93636d00f4cb2c2b885c4983777d5bb69ddf0b6280ddd60819",
+        "source": "",
+        "type": "tar"
+      },
+      "dependencies": [
+        "anthoscli"
+      ],
+      "details": {
+        "description": "The cli for Anthos infrastructure.",
+        "display_name": "anthoscli"
+      },
+      "id": "anthoscli-linux-arm",
+      "is_configuration": false,
+      "is_hidden": true,
+      "is_required": false,
+      "platform": {
+        "architectures": [
+          "arm"
+        ],
+        "operating_systems": [
+          "LINUX"
+        ]
+      },
+      "platform_required": false,
+      "version": {
+        "build_number": 20231027131936,
+        "version_string": "0.2.43"
+      }
+    }
+  ],
+  "revision": 20231027131936,
+  "schema_version": {
+    "no_update": false,
+    "url": "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz",
+    "version": 3
+  },
+  "version": "453.0.0"
+}

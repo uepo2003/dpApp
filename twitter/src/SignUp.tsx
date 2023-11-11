@@ -8,29 +8,33 @@ import {
   Heading,
   useColorModeValue,
 } from "@chakra-ui/react";
-
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  
-  const newSignUp = async () => {
-    console.log( email, password );
+  const navigate = useNavigate();
+  const newSignUp = async (event: any) => {
+    event.preventDefault();
+    console.log(email, password);
     const signup = { email, password };
-   
+
     try {
-      const response = await axios.post("http://localhost:8080/signups", signup);
+      const response = await axios.post(
+        "http://localhost:8080/signups",
+        signup,
+      );
       if (response.status === 200) {
+        navigate("/");
         console.log("seiko");
-        setEmail("");
-        setPassword("");
       }
     } catch (error) {
       console.log("niko", error);
     }
+    setEmail("");
+    setPassword("");
   };
 
   return (
@@ -50,11 +54,19 @@ function SignUp() {
           </Heading>
           <FormControl id="email">
             <FormLabel>メールアドレス</FormLabel>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </FormControl>
           <FormControl id="password">
             <FormLabel>パスワード</FormLabel>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </FormControl>
 
           <Button

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
 
- import { FollowProps } from './Id';
+import { FollowProps } from "./Id";
 const FollowButton: React.FC<FollowProps> = ({ user }) => {
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
   const follow = async () => {
     try {
-      await axios.post('/follow', { user });
+      await axios.post("/follow", { user });
       setIsFollowing(true);
     } catch (error) {
       console.error(error);
@@ -16,9 +16,9 @@ const FollowButton: React.FC<FollowProps> = ({ user }) => {
 
   return (
     <button onClick={follow} disabled={isFollowing}>
-      {isFollowing ? 'フォロー中' : 'フォローする'}
+      {isFollowing ? "フォロー中" : "フォローする"}
     </button>
   );
-}
+};
 
 export default FollowButton;

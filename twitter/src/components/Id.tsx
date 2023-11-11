@@ -1,6 +1,6 @@
 export type FollowProps = {
-    user: {
+  user: {
     userId: number;
     followingId: number;
-    }
-  }
+  };
+};

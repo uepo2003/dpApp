@@ -27,10 +27,13 @@ function Login() {
   const handleLogin = async () => {
     console.log(email, password);
     const login = { email, password };
+
     try {
-      const response = await axios.post("http://localhost:8080/logins", login);
+      const response = await axios.post("http://localhost:8080/logins", login, {
+        withCredentials: true,
+      });
       if (response.status === 200) {
-        navigate("/mypage");
+        navigate("/");
       }
     } catch (error) {
       console.log("niko", error);
