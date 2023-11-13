@@ -3,8 +3,7 @@ import Home from "./home";
 import SignUp from "./SignUp";
 import Login from "./Login";
 import UpLoad from "./UpLoad"
-import MyPage from "./Mypage";
-import Cookie from "./Cookie";
+import Other from "./Other";
 function App() {
   return (
     <BrowserRouter>
@@ -12,8 +11,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/SignUp" element={<SignUp />} />
         <Route path="/Login" element={<Login />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/Cookie" element={<Cookie />} />
+        <Route path="/Other" element={<Other/>} />
         <Route path="/UpLoad" element={<UpLoad />} />
       </Routes>
     </BrowserRouter>

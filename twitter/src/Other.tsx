@@ -12,26 +12,37 @@ import {
   Image,
   CardFooter,
 } from "@chakra-ui/react";
-import FollowButton from "./Follow";
 import { PhoneIcon, AddIcon } from "@chakra-ui/icons";
+import axios from "axios";
+import { useState, useEffect } from "react";
 
-import { FollowProps } from "./Id";
-const Other: React.FC<FollowProps> = ({ user }) => {
+const Other = () => {
+  const [followers, setFollower] = useState([]);
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/followers", { withCredentials: true })
+      .then((response: any) => {
+        　console.log(response.data);
+          setFollower(response.data);
+      });
+  }, []);
   return (
     <>
+
       <Flex justify="center" align="center" h="100vh">
-        <Card maxW="md">
+      {followers.map((follower) => (
+        <Card maxW="md" key={follower.id}>
           <CardHeader>
             <Flex spacing="4">
               <Flex flex="1" gap="4" alignItems="center" flexWrap="wrap">
                 <Avatar
                   name="Segun Adebayo"
-                  src="https://bit.ly/sage-adebayo"
+                  src={ follower.image }
                 />
 
                 <Box>
-                  <Heading size="sm">Segun Adebayo</Heading>
-                  <Text>Creator, Chakra UI</Text>
+                  <Heading size="sm">{follower.username}</Heading>
+                  <Text>fo</Text>
                 </Box>
               </Flex>
               <IconButton
@@ -64,9 +75,7 @@ const Other: React.FC<FollowProps> = ({ user }) => {
               },
             }}
           >
-            <Button flex="1" variant="ghost" leftIcon={<AddIcon />}>
-              <FollowButton user={user} />
-            </Button>
+          
             <Button flex="1" variant="ghost" leftIcon={<AddIcon />}>
               Comment
             </Button>
@@ -75,6 +84,7 @@ const Other: React.FC<FollowProps> = ({ user }) => {
             </Button>
           </CardFooter>
         </Card>
+           ))}
       </Flex>
     </>
   );

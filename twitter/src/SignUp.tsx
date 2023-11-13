@@ -1,86 +1,86 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Stack,
-  Heading,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useRef } from 'react';
+import { Button, Stack, Input } from '@chakra-ui/react';
+import { AddIcon, EmailIcon } from '@chakra-ui/icons';
+import axios from 'axios';
 
-function SignUp() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  const newSignUp = async (event: any) => {
-    event.preventDefault();
-    console.log(email, password);
-    const signup = { email, password };
+const SignUp = () => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
 
-    try {
-      const response = await axios.post(
-        "http://localhost:8080/signups",
-        signup,
-      );
-      if (response.status === 200) {
-        navigate("/");
-        console.log("seiko");
-      }
-    } catch (error) {
-      console.log("niko", error);
-    }
-    setEmail("");
-    setPassword("");
+  const onUsernameChange = (event) => {
+    setUsername(event.target.value);
   };
 
-  return (
-    <>
-      <Box
-        rounded={"lg"}
-        bg={useColorModeValue("white", "gray.700")}
-        boxShadow={"lg"}
-        p={8}
-      >
-        <Stack spacing={5}>
-          <Heading
-            lineHeight={1.1}
-            fontSize={{ base: "2xl", sm: "3xl", md: "4xl" }}
-          >
-            新規登録
-          </Heading>
-          <FormControl id="email">
-            <FormLabel>メールアドレス</FormLabel>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </FormControl>
-          <FormControl id="password">
-            <FormLabel>パスワード</FormLabel>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </FormControl>
+  const onEmailChange = (event) => {
+    setEmail(event.target.value);
+  };
 
-          <Button
-            bg={"blue.400"}
-            color={"white"}
-            _hover={{ bg: "blue.500" }}
-            onClick={newSignUp}
-            mt="30"
-          >
-            登録する
-          </Button>
-        </Stack>
-      </Box>
-    </>
+  const onPasswordChange = (event) => {
+    setPassword(event.target.value);
+  };
+
+  const handleButtonClick = () => {
+      fileInputRef.current.click();
+  };
+  const onFileChange = event => {
+    setFile(event.target.files[0]);
+  };
+
+
+  async function handleSignUp() {
+    const formData = new FormData();
+    formData.append('file', file); // ファイルを追加
+    formData.append('username', username); // テキストも追加
+    formData.append('email', email);
+    formData.append('password', password);
+ 
+    try {
+      const response = await axios.post('http://localhost:8080/signups', formData);
+      console.log(response.data);
+
+    } catch (error) {
+      console.error("Error in signup: ", error);
+    }
+  }
+
+  return (
+    <Stack spacing={4} p={4}>
+      <Input
+        value={username}
+        onChange={onUsernameChange}
+        placeholder="ユーザー名"
+      />
+      <Input
+        value={email}
+        onChange={onEmailChange}
+        placeholder="メールアドレス"
+        type="email"
+      />
+      <Input
+        value={password}
+        onChange={onPasswordChange}
+        placeholder="パスワード"
+        type="password"
+      />
+       <Input 
+          type="file" 
+          onChange={onFileChange} 
+          ref={fileInputRef} 
+          hidden 
+        />
+        <Button 
+            leftIcon={<AddIcon />} 
+             onClick={handleButtonClick} 
+             aria-label="Upload file" 
+        >画像を追加
+        </Button>
+      <Button onClick={handleSignUp} colorScheme="blue">
+        登録
+      </Button>
+    </Stack>
   );
 }
 

@@ -22,7 +22,9 @@ type SignUp struct {
 	ID       string `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	IsLoggedIn bool    `json:"is_logged_in"`
+	IsLoggedIn bool   `json:"is_logged_in"`
+	UserName string   `json:"username"`
+	Image string   `json:"image"`
 }
 
 
@@ -61,8 +63,68 @@ type Cookie struct {
 
 func createSignUp(w http.ResponseWriter, r *http.Request) {
 
-	var newSignUp SignUp
-	json.NewDecoder(r.Body).Decode(&newSignUp)
+	r.ParseMultipartForm(1000 << 20)
+	file, handler, err := r.FormFile("file")
+    email := r.FormValue("email")
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+    fmt.Println(username)
+	fmt.Println(file)
+	if err != nil {
+		http.Error(w, "File error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	bucketName := "toaru2003"                               // GCSバケット名
+	gcsFileName := handler.Filename                          // GCSバケットのアップロード先のパス
+	credentialsFile := "avid-life-402901-6ec841ab4945.json" // サービスアカウント鍵ファイルのパス
+
+
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(credentialsFile))
+	if err != nil {
+		http.Error(w, "GCS client error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+
+	bucket := client.Bucket(bucketName)
+
+
+	obj := bucket.Object(gcsFileName)
+
+
+	wc := obj.NewWriter(ctx)
+	if _, err := io.Copy(wc, file); err != nil {
+		http.Error(w, "Upload error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := wc.Close(); err != nil {
+		http.Error(w, "Upload error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("File upload successful")
+
+	serviceAccountKey, err := os.ReadFile("avid-life-402901-6ec841ab4945.json")
+	if err != nil {
+	  fmt.Println(err)
+	}
+
+	config, err := google.JWTConfigFromJSON(serviceAccountKey)
+	if err != nil {
+	fmt.Println(err)
+	}
+
+	nipo, err := storage.SignedURL(bucketName, gcsFileName, &storage.SignedURLOptions{
+		GoogleAccessID: "nipo-95@avid-life-402901.iam.gserviceaccount.com",
+		PrivateKey:     config.PrivateKey,
+		Method:         "GET",
+		Expires:        time.Now().Add(360 * time.Minute),
+	})
+
+
 
 	fmt.Println("niko")
 	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
@@ -71,18 +133,20 @@ func createSignUp(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newSignUp.Password), 4)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 4)
 	if err != nil {
 		fmt.Println(err)
 	}
-	newSignUp.Password = string(hashedPassword)
-	newSignUp.ID = uuid.New().String()
+	HashPassword := string(hashedPassword)
+    ID := uuid.New().String()
 
-	fmt.Println(newSignUp.Email, newSignUp.Password)
-	_, err = db.Exec("INSERT INTO signups(ID, Email, Password) VALUES (?,?,?)", newSignUp.ID, newSignUp.Email, newSignUp.Password)
+	fmt.Println(HashPassword)
+	fmt.Println(ID)
+	_, err = db.Exec("INSERT INTO users(ID, Email, Password, IsLoggedIn,username,image) VALUES (?,?,?,?,?,?)", ID, email, HashPassword, false, username, nipo)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println("seiko")
 }
 
 func IsFollowing(w http.ResponseWriter, r *http.Request) {
@@ -270,12 +334,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	var users []SignUp
 	for rows.Next() {
 		var u SignUp
-		err := rows.Scan(&u.ID, &u.Email, &u.Password, &u.IsLoggedIn)
+		err := rows.Scan(&u.ID, &u.Email, &u.Password, &u.IsLoggedIn, &u.UserName, &u.Image)
 		if err != nil {
 			fmt.Println(err)
 		}
 		users = append(users, u)
-		fmt.Println(users)
+		fmt.Println(users, "nikoniko")
 	}
 
 	if err = rows.Err(); err != nil {
@@ -365,6 +429,94 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func Follower(w http.ResponseWriter, r *http.Request) { 
+	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	cookie, err := r.Cookie("nipo")
+	if err != nil {
+		http.Error(w, "Cookie not found", http.StatusBadRequest)
+		return
+	}
+
+	vpo := cookie.Value
+
+	stmt, err := db.Prepare("SELECT u.* FROM follows f JOIN users u ON f.followed_id = u.ID WHERE f.follower_id = ?")
+	if err != nil {
+		panic(err.Error()) 
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(vpo)
+	if err != nil {
+		panic(err.Error()) 
+	}
+	defer rows.Close()
+
+	var results []SignUp
+	for rows.Next() {
+		var r SignUp
+		if err := rows.Scan(&r.ID, &r.Email, &r.Password, &r.IsLoggedIn, &r.UserName, &r.Image); err != nil {
+			fmt.Println(err)
+			continue
+		}
+		results = append(results, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(results); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+
+// func Follower(w http.ResponseWriter, r *http.Request) {
+
+// 	cookie, err := r.Cookie("nipo")
+
+// 	if err != nil {
+// 		fmt.Println("Cookie: ", err)
+// 	}
+
+// 	vpo := cookie.Value
+// 	fmt.Println(vpo)
+
+// 	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
+// 	defer db.Close()
+ 
+//     rows := db.QueryRow("SELECT u.* FROM follows f JOIN users u ON f.followed_id = u.ID WHERE f.follower_id = ?", vpo)
+// 	fmt.Println("seiko")
+// 	defer rows.Close()
+
+// 	var results []SignUp
+
+// 	for rows.Next() {
+// 		var r SignUp
+// 		err := rows.Scan(&r.ID, &r.Email, &r.Password, &r.IsLoggedIn, &r.UserName, &r.Image)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		results = append(users, r)
+// 		fmt.Println(users, "nikoniko")
+// 	}
+
+// 	if err = rows.Err(); err != nil {
+// 		fmt.Println(err)
+// 	}
+	
+// 	json.NewEncoder(w).Encode(result)
+	
+// } 
 
 func upLoad(w http.ResponseWriter, r *http.Request) {
 
@@ -490,9 +642,10 @@ func main() {
 	// http.HandleFunc("/posts", enableCORS(createPost))
 	http.HandleFunc("/logouts", enableCORS(logout))
 	http.HandleFunc("/logins", enableCORS(createLogin))
-	http.HandleFunc("/signups", createSignUp)
+	http.HandleFunc("/signups", enableCORS(createSignUp))
 	http.HandleFunc("/set", enableCORS(setCookieHandler))
 	http.HandleFunc("/get/cookies", enableCORS(setCookieHandler))
+    http.HandleFunc("/followers", enableCORS(Follower))
 	http.ListenAndServe(":8080", nil)
 
 }

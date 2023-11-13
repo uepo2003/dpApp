@@ -38,7 +38,7 @@ function Home() {
   const [users, setUsers] = useState([]);
   const [value, setValue] = useState([]);
   const [LoggedIn, setLoggedIn] = useState();
-
+  const [count, setCount] = useState(0);
   const handleLogout = async () => {
     axios
     .get("http://localhost:8080/logouts", { withCredentials: true })
@@ -77,7 +77,7 @@ function Home() {
       .get("http://localhost:8080/isLoggedIn", { withCredentials: true })
       .then((response: any) => {
         console.log(response.data.success);
-        setValue(response.data.success);
+        setLoggedIn(response.data.success);
       });
   }, []);
 
@@ -92,6 +92,7 @@ function Home() {
 
   useEffect(() => {
     axios.get("http://localhost:8080/get/posts").then((response: any) => {
+      console.log(response.data);
       setPosts(response.data);
     });
   }, []);
@@ -117,7 +118,14 @@ function Home() {
     });
   }, []);
 
+  const [counters, setCounters] = useState({});
 
+  const updateCounter = (cardId, increment) => {
+    setCounters(prevCounters => ({
+      ...prevCounters,
+      [cardId]: (prevCounters[cardId] || 0) + increment
+    }));
+  };
   
   return (
     <>
@@ -140,12 +148,14 @@ function Home() {
         variant="ghost"
         mt="30"
       />
+     <Link　href="/Other">
       <IconButton
         aria-label="Profile"
         icon={<Icon as={FaUser} w={30} h={30} />}
         variant="ghost"
         mt="30"
       />
+      </Link>
       <IconButton
         aria-label="More"
         icon={<Icon as={FaEllipsisH} w={30} h={30} />}
@@ -180,7 +190,7 @@ function Home() {
         mt="30"
         w="100%"
       >
-        フォロワー一覧
+          <Link href="/SignUp">SignUp</Link>
       </Button>
     </Flex>
   </Box>
@@ -223,14 +233,14 @@ function Home() {
               },
             }}
           >
-            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>}>
-              9
+            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>} >
+            {counters[post.userId] || 0}
             </Button>
-            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>}>
-              9
+            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>}onClick={() => updateCounter(post.userId, -1)}>
+              -
             </Button>
-            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>}>
-              6
+            <Button flex="1" variant="ghost" leftIcon={<WarningIcon/>}　onClick={() => updateCounter(post.userId, +1)}>
+              +
             </Button>
           </CardFooter>
         </Card>
@@ -266,54 +276,28 @@ function Home() {
       </Box>
     </Box>
     
-    <Box p="3" borderTop="1px" borderColor="gray.200">
-      <Heading size="sm">Who to follow</Heading>
-      {users.map((user) => (
-      <Flex mt="3" alignItems="center">
-        <Avatar
-          name="Dan Abrahmov"
-          src="https://bit.ly/dan-abramov"
-        />
-        <Box ml="3">
-          <Text fontWeight="bold">Dan Abrahmov</Text>
-          <Text>@dan_abramov</Text>
-        </Box>
-        <Spacer />
-        <Button colorScheme="twitter" size="sm" onClick={() => follow(user.id)}> 
-        {following[user.id] ? "Follow" : "Following"}
-        </Button>
-      </Flex>
-          ))}
-      <Flex mt="3" alignItems="center">
-        <Avatar
-          name="Kent Dodds"
-          src="https://bit.ly/kent-c-dodds"
-        />
-        <Box ml="3">
-          <Text fontWeight="bold">Kent Dodds</Text>
-          <Text>@kentcdodds</Text>
-        </Box>
-        <Spacer />
-        <Button colorScheme="twitter" size="sm">
-          Follow
-        </Button>
-      </Flex>
-      <Flex mt="3" alignItems="center">
-        <Avatar
-          name="Ryan Florence"
-          src="https://bit.ly/ryan-florence"
-        />
-        <Box ml="3">
-          <Text fontWeight="bold">Ryan Florence</Text>
-          <Text>@ryanflorence</Text>
-        </Box>
-        <Spacer />
-        <Button colorScheme="twitter" size="sm">
-          Follow
-        </Button>
-      </Flex>
+    <Box p="3" borderTop="1px" borderColor="gray.200" overflowY="auto" maxHeight="400px">
+  <Heading size="sm">Who to follow</Heading>
+  {users.map((user) => (
+    <Flex mt="3" alignItems="center">
+      <Avatar
+        name="Dan Abrahmov"
+        src={ user.image }
+
+      />
+      <Box ml="3">
+        <Text fontWeight="bold">{ user.usercname }</Text>
+        <Text>@dan_abramov</Text>
+      </Box>
+      <Spacer />
+      <Button colorScheme="twitter" size="sm" onClick={() => follow(user.id)}> 
+        {following[user.id] ? "Following" : "Follow"}
+      </Button>
+    </Flex>
+  ))}
 </Box>
-          <WrapItem>
+
+          {/* <WrapItem>
             <Avatar
               size="2xl"
               name="Segun Adebayo"
@@ -331,7 +315,7 @@ function Home() {
             borderColor="twitter.500"
           >
             フォロー中
-          </Button>
+          </Button> */}
         </Box>
       </Flex>
     </>
