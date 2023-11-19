@@ -50,6 +50,12 @@ type GetPosts struct {
 	UserID  string `json:"userId"`
 	Content string `json:"content"`
 	Url string `json:"url"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	IsLoggedIn bool   `json:"is_logged_in"`
+	UserName string   `json:"username"`
+	Image string   `json:"image"`
 }
 
 type ID struct {
@@ -189,7 +195,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM posts")
+	rows, err := db.Query("SELECT posts.*, users.image FROM posts JOIN users ON posts.UserID = users.ID")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -198,7 +204,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []GetPosts
 	for rows.Next() {
 		var p GetPosts
-		err := rows.Scan(&p.PostID, &p.UserID, &p.Content, &p.Url)
+		err := rows.Scan(&p.PostID, &p.UserID, &p.Content, &p.Url, &p.Image)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -316,6 +322,23 @@ func unFollows(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]bool{"success": false})
 	fmt.Println("Unfollow successful")
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	 
+	ID := r.URL.Query().Get("ID")
+
+    fmt.Println(ID);
+	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	if err != nil {
+		fmt.Println("Database connection failed: ", err)
+		return
+	}
+	defer db.Close()
+
+	db.Exec("DELETE FROM posts WHERE postId = ?", ID)
+
+	fmt.Println("Delete successful")
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -518,6 +541,99 @@ func Follower(w http.ResponseWriter, r *http.Request) {
 	
 // } 
 
+func edit(w http.ResponseWriter, r *http.Request) {
+	
+	id := r.FormValue("id")
+	text := r.FormValue("text")
+	fmt.Println("Text: ", text)
+	
+    fmt.Println(id)
+	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	if text != "" {
+        _, err := db.Exec("UPDATE posts SET Content = ? WHERE postId = ?", text , id)
+		if err != nil {
+		  fmt.Println(err)
+        }
+	}
+
+	r.ParseMultipartForm(1000 << 20)
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "File error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+    if file != nil {
+	bucketName := "toaru2003"                               // GCSバケット名
+	gcsFileName := handler.Filename                          // GCSバケットのアップロード先のパス
+	credentialsFile := "avid-life-402901-6ec841ab4945.json" // サービスアカウント鍵ファイルのパス
+
+
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(credentialsFile))
+	if err != nil {
+		http.Error(w, "GCS client error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+
+	bucket := client.Bucket(bucketName)
+
+
+	obj := bucket.Object(gcsFileName)
+
+
+	wc := obj.NewWriter(ctx)
+	if _, err := io.Copy(wc, file); err != nil {
+		http.Error(w, "Upload error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := wc.Close(); err != nil {
+		http.Error(w, "Upload error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("File upload successful")
+
+	serviceAccountKey, err := os.ReadFile("avid-life-402901-6ec841ab4945.json")
+	if err != nil {
+	  fmt.Println(err)
+	}
+
+	config, err := google.JWTConfigFromJSON(serviceAccountKey)
+	if err != nil {
+	fmt.Println(err)
+	}
+
+	url, err := storage.SignedURL(bucketName, gcsFileName, &storage.SignedURLOptions{
+		GoogleAccessID: "nipo-95@avid-life-402901.iam.gserviceaccount.com",
+		PrivateKey:     config.PrivateKey,
+		Method:         "GET",
+		Expires:        time.Now().Add(360 * time.Minute),
+	})
+
+	
+
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "署名付きURL生成エラー: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.Exec("UPDATE posts SET Url = ? WHERE postId = ?", url, id)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+ } 
+ 
+}
 func upLoad(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("nipo")
@@ -638,6 +754,7 @@ func main() {
 	http.HandleFunc("/isLoggedIn", enableCORS(isLoggedIn))
 	http.HandleFunc("/get/posts", enableCORS(getPosts))
 	http.HandleFunc("/upLoads", enableCORS(upLoad))
+	http.HandleFunc("/edits", enableCORS(edit))
 	http.HandleFunc("/followings", enableCORS(IsFollowing))
 	// http.HandleFunc("/posts", enableCORS(createPost))
 	http.HandleFunc("/logouts", enableCORS(logout))
@@ -646,6 +763,7 @@ func main() {
 	http.HandleFunc("/set", enableCORS(setCookieHandler))
 	http.HandleFunc("/get/cookies", enableCORS(setCookieHandler))
     http.HandleFunc("/followers", enableCORS(Follower))
+	http.HandleFunc("/delete", enableCORS(Delete))
 	http.ListenAndServe(":8080", nil)
 
 }

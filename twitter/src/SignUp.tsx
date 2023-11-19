@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react';
-import { Button, Stack, Input } from '@chakra-ui/react';
-import { AddIcon, EmailIcon } from '@chakra-ui/icons';
-import axios from 'axios';
+import { useState, useRef } from "react";
+import { Button, Stack, Input } from "@chakra-ui/react";
+import { AddIcon, EmailIcon } from "@chakra-ui/icons";
+import axios from "axios";
 
 const SignUp = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -23,24 +23,25 @@ const SignUp = () => {
   };
 
   const handleButtonClick = () => {
-      fileInputRef.current.click();
+    fileInputRef.current.click();
   };
-  const onFileChange = event => {
+  const onFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-
   async function handleSignUp() {
     const formData = new FormData();
-    formData.append('file', file); // ファイルを追加
-    formData.append('username', username); // テキストも追加
-    formData.append('email', email);
-    formData.append('password', password);
- 
-    try {
-      const response = await axios.post('http://localhost:8080/signups', formData);
-      console.log(response.data);
+    formData.append("file", file); // ファイルを追加
+    formData.append("username", username); // テキストも追加
+    formData.append("email", email);
+    formData.append("password", password);
 
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/signups",
+        formData,
+      );
+      console.log(response.data);
     } catch (error) {
       console.error("Error in signup: ", error);
     }
@@ -65,23 +66,19 @@ const SignUp = () => {
         placeholder="パスワード"
         type="password"
       />
-       <Input 
-          type="file" 
-          onChange={onFileChange} 
-          ref={fileInputRef} 
-          hidden 
-        />
-        <Button 
-            leftIcon={<AddIcon />} 
-             onClick={handleButtonClick} 
-             aria-label="Upload file" 
-        >画像を追加
-        </Button>
+      <Input type="file" onChange={onFileChange} ref={fileInputRef} hidden />
+      <Button
+        leftIcon={<AddIcon />}
+        onClick={handleButtonClick}
+        aria-label="Upload file"
+      >
+        画像を追加
+      </Button>
       <Button onClick={handleSignUp} colorScheme="blue">
         登録
       </Button>
     </Stack>
   );
-}
+};
 
 export default SignUp;
