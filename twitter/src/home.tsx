@@ -30,6 +30,7 @@ import {
   WarningIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { FaHeart } from "react-icons/fa";
 import { FaList, FaUser, FaEllipsisH, FaFeatherAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -82,11 +83,12 @@ function Home() {
   }
 
   const likeCount = async (postId: any) => {
-    axios
-     .post("http://localhost:8080/likes", { withCredentials: true }, { postId })
-      .then((response: any) => {
-       console.log(response);
-      });
+   try{ 
+    const response = axios.get(`http://localhost:8080/likes?ID=${postId}`, { withCredentials: true })
+     console.log(response);
+    }catch (error) {
+      console.error(error);
+    }
   };
 
   const handleLogout = async () => {
@@ -102,7 +104,6 @@ function Home() {
     setSelectedPostId(id);
     setSelectedPostContent(content);
     setSelectedPostImage(image);
-   
     onOpen();
   };
 
@@ -301,7 +302,7 @@ function Home() {
                   <Button
                     flex="1"
                     variant="ghost"
-                    leftIcon={<WarningIcon />}
+                    leftIcon={<FaHeart />}
                     onClick={() => likeCount(post.postId)}
                   >
                     -

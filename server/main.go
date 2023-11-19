@@ -730,6 +730,84 @@ func upLoad(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"fileUrl": url})
 }
 
+func likeTweet(w http.ResponseWriter, r *http.Request) {
+
+	cookie, err := r.Cookie("nipo")
+	if err != nil {
+		http.Error(w, "Cookie not found: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	user := cookie.Value
+
+    fmt.Println(user)
+
+	fmt.Println("nipo")
+	ID := r.URL.Query().Get("ID")
+	fmt.Println(ID)
+
+	
+	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+   
+    var count int
+    err = db.QueryRow("SELECT COUNT(*) FROM likes WHERE user_id = ? AND tweet_id = ?", user, ID).Scan(&count)
+    if err != nil {
+        http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if count > 0 {
+        http.Error(w, "Already liked", http.StatusBadRequest)
+        return
+    }
+
+	_, err = db.Exec("INSERT INTO likes (user_id, tweet_id) VALUES (?, ?)", user, ID)
+	if err != nil {
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	
+}
+
+func unLikeTweet(w http.ResponseWriter, r *http.Request) {
+
+	cookie, err := r.Cookie("nipo")
+	if err != nil {
+		http.Error(w, "Cookie not found: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	user := cookie.Value
+
+    fmt.Println(user)
+
+	fmt.Println("nipo")
+	ID := r.URL.Query().Get("ID")
+	fmt.Println(ID)
+
+	
+	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+   
+   
+
+	_, err = db.Exec("delete from likes where user_id = ? and tweet_id = ?", user, ID)
+	if err != nil {
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	
+}
+
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -764,6 +842,8 @@ func main() {
 	http.HandleFunc("/get/cookies", enableCORS(setCookieHandler))
     http.HandleFunc("/followers", enableCORS(Follower))
 	http.HandleFunc("/delete", enableCORS(Delete))
+	http.HandleFunc("/likes", enableCORS(likeTweet))
 	http.ListenAndServe(":8080", nil)
 
 }
+
