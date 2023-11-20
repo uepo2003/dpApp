@@ -770,7 +770,7 @@ func likeTweet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	json.NewEncoder(w).Encode(map[string]bool{"status": true})
 	
 }
 
@@ -804,7 +804,7 @@ func unLikeTweet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	json.NewEncoder(w).Encode(map[string]bool{"status": false})
 	
 }
 
