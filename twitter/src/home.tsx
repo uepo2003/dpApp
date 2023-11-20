@@ -297,7 +297,6 @@ function Home() {
                   }}
                 >
                   <Button flex="1" variant="ghost" leftIcon={<WarningIcon />}>
-                    {counters[post.userId] || 0}
                   </Button>
                   <Button
                     flex="1"
@@ -305,7 +304,7 @@ function Home() {
                     leftIcon={<FaHeart />}
                     onClick={() => likeCount(post.postId)}
                   >
-                    -
+                  {post.count}
                   </Button>
                   <Button
                     flex="1"
@@ -313,7 +312,7 @@ function Home() {
                     leftIcon={<WarningIcon />}
                     // onClick={() => updateCounter(post.userId, +1)}
                   >
-                    +
+                  
                   </Button>
                   <Button onClick={() => openModal(post.postId, post.content,　post.url)}>edit</Button>
                   <Button  onClick={() => handleDelete(post.postId)}>delete</Button>

@@ -1,20 +1,22 @@
 package main
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"time"
+   
+	"cloud.google.com/go/storage"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/api/option"
-	"io"
 	"golang.org/x/oauth2/google"
-	"net/http"
-    "os"
-	"time"
+	// "golang.org/x/text/number"
+	"google.golang.org/api/option"
 )
 
  
@@ -56,6 +58,16 @@ type GetPosts struct {
 	IsLoggedIn bool   `json:"is_logged_in"`
 	UserName string   `json:"username"`
 	Image string   `json:"image"`
+	Count int   `json:"count"`
+}
+
+type Posts struct {
+	PostID  int    `json:"postId"`
+	UserID  string `json:"userId"`
+	Content string `json:"content"`
+	Url string `json:"url"`
+	Image sql.NullString  `json:"image"`
+	Count int  `json:"count"`
 }
 
 type ID struct {
@@ -195,16 +207,16 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT posts.*, users.image FROM posts JOIN users ON posts.UserID = users.ID")
+	rows, err := db.Query("SELECT posts.*, users.image, COUNT(likes.user_id) as Count FROM posts JOIN users ON posts.UserID = users.ID LEFT JOIN likes ON posts.PostID = likes.tweet_id GROUP BY posts.PostID, users.image")
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer rows.Close()
-
-	var posts []GetPosts
+    fmt.Println(rows);
+	var posts []Posts
 	for rows.Next() {
-		var p GetPosts
-		err := rows.Scan(&p.PostID, &p.UserID, &p.Content, &p.Url, &p.Image)
+		var p Posts
+		err := rows.Scan(&p.PostID, &p.UserID, &p.Content, &p.Url, &p.Image, &p.Count)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -760,10 +772,14 @@ func likeTweet(w http.ResponseWriter, r *http.Request) {
     }
 
     if count > 0 {
-        http.Error(w, "Already liked", http.StatusBadRequest)
-        return
+	_, err = db.Exec("delete from likes where user_id = ? and tweet_id = ?", user, ID)
+	if err != nil {
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+		json.NewEncoder(w).Encode(map[string]bool{"status": false})
     }
-
+if count == 0 {
 	_, err = db.Exec("INSERT INTO likes (user_id, tweet_id) VALUES (?, ?)", user, ID)
 	if err != nil {
 		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
@@ -771,42 +787,11 @@ func likeTweet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]bool{"status": true})
-	
+}
 }
 
-func unLikeTweet(w http.ResponseWriter, r *http.Request) {
+func tweetCount(w http.ResponseWriter, r *http.Request) {}
 
-	cookie, err := r.Cookie("nipo")
-	if err != nil {
-		http.Error(w, "Cookie not found: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	user := cookie.Value
-
-    fmt.Println(user)
-
-	fmt.Println("nipo")
-	ID := r.URL.Query().Get("ID")
-	fmt.Println(ID)
-
-	
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
-   
-   
-
-	_, err = db.Exec("delete from likes where user_id = ? and tweet_id = ?", user, ID)
-	if err != nil {
-		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(map[string]bool{"status": false})
-	
-}
 
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
