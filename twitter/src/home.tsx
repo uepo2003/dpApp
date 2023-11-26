@@ -39,19 +39,19 @@ import dpLogo from "./assets/DP.png";
 function Home() {
   const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const [posts, setPosts] = useState([]);
-  const [following, setFollowing] = useState({});
-  const [users, setUsers] = useState([]);
+  const [posts, setPosts] = useState<Array<{postId: string, content: string, url: string, image: string, count: string}>>([]);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [users, setUsers] = useState<Array<{id: string, image: string, username: string}>>([]);
   const [value, setValue] = useState([]);
   const [LoggedIn, setLoggedIn] = useState();
-  const initialRef = useRef(null);
+  // const initialRef = useRef(null);
   const [selectedPostId, setSelectedPostId] = useState('');
   const [selectedPostContent, setSelectedPostContent] = useState('');
   const [selectedPostImage, setSelectedPostImage] = useState('');
   const [text, setText] = useState("");
-  const [file, setFile] = useState(null);
-  const [id, setId] = useState("");
-  const fileInputRef = useRef(null);
+  const [file, setFile] = useState<File | null>(null);
+  // const [id, setId] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   async function handleEdit() {
@@ -59,7 +59,9 @@ function Home() {
     console.log(text);
     const formData = new FormData();
     formData.append("id", selectedPostId);
-    formData.append("file", file); // ファイルを追加
+    if (file) {
+      formData.append("file", file); // ファイルを追加
+    }
     formData.append("text", text); // テキストも追加
     axios.post("http://localhost:8080/edits", formData)
     .then(response => {
@@ -74,7 +76,7 @@ function Home() {
     });
   }
 
-  const handleDelete = async (ID) =>   {
+  const handleDelete = async (ID: string) =>   {
     console.log(ID);
     axios.delete(`http://localhost:8080/delete?ID=${ID}`)
       .then((response: any) => {
@@ -97,10 +99,11 @@ function Home() {
       .then((response: any) => {
         console.log(response.data.success);
         setValue(response.data.success);
+        console.log(value);
       });
   };
 
-  const openModal = (id,content,image) => {
+  const openModal = (id: string, content: string, image: string) => {
     setSelectedPostId(id);
     setSelectedPostContent(content);
     setSelectedPostImage(image);
@@ -108,19 +111,24 @@ function Home() {
   };
 
   const handleButtonClick = () => {
-    fileInputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
-  const onFileChange = (event) => {
-    setFile(event.target.files[0]);
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setFile(event.target.files[0]);
+    }
   };
+
 
  
-  const onTextChange = (event) => {
+  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(event.target.value);
   };
   
-  const follow = async (userId) => {
+  const follow = async (userId: string) => {
     try {
       if (following[userId]) {
         const response = await axios.post(
@@ -189,14 +197,14 @@ function Home() {
     });
   }, []);
 
-  const [counters, setCounters] = useState({});
+  // const [counters, setCounters] = useState({});
 
-  const updateCounter = (cardId, increment) => {
-    setCounters((prevCounters) => ({
-      ...prevCounters,
-      [cardId]: (prevCounters[cardId] || 0) + increment,
-    }));
-  };
+  // const updateCounter = (cardId, increment) => {
+  //   setCounters((prevCounters) => ({
+  //     ...prevCounters,
+  //     [cardId]: (prevCounters[cardId] || 0) + increment,
+  //   }));
+  // };
   
   return (
     <>
@@ -270,7 +278,7 @@ function Home() {
             {posts.map((post) => (
               <Card key={post.postId} mb="10">
                 <CardHeader>
-                  <Flex spacing="4" alignItems="center">
+                  <Flex gap="4" alignItems="center">
                     <Avatar
                       name="Segun Adebayo"
                       src={post.image || "https://bit.ly/sage-adebayo"} 
@@ -339,10 +347,10 @@ function Home() {
                        画像を変更
                        </Button>
                        <Button
-        　　　　　　　     onClick={() => handleEdit(selectedPostId)}
-        　　　　　　　　　　colorScheme="twitter"
-        　　　　　　　　　　leftIcon={<EmailIcon />}
-     　　　　　　　　　　　>
+                         onClick={handleEdit}
+                         colorScheme="twitter"
+                         leftIcon={<EmailIcon />}
+                        >
         　　　　　　　　　　変更
       　　　　　　　　　　</Button>
                       </ModalBody>
@@ -397,7 +405,7 @@ function Home() {
               <Flex key={user.id} mt="3" alignItems="center">
                 <Avatar name="Dan Abrahmov" src={user.image} />
                 <Box ml="3">
-                  <Text fontWeight="bold">{user.usercname}</Text>
+                  <Text fontWeight="bold">{user.username}</Text>
                   <Text>@dan_abramov</Text>
                 </Box>
                 <Spacer />

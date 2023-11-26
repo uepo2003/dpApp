@@ -5,32 +5,39 @@ import {
   Textarea,
   Image,
   Input,
-  IconButton,
+  // IconButton,
 } from "@chakra-ui/react";
 import { AddIcon, EmailIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const UpLoad = () => {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [upFile, setUpFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  
   const handleButtonClick = () => {
-    fileInputRef.current.click();
-  };
-  const onFileChange = (event) => {
-    setFile(event.target.files[0]);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setFile(event.target.files[0]);
+    }
   };
 
-  const onTextChange = (event) => {
+  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(event.target.value);
   };
 
   async function handleUpload() {
     console.log(text);
     const formData = new FormData();
-    formData.append("file", file); // ファイルを追加
+    if (file) {
+      formData.append("file", file); // ファイルを追加
+    }
     formData.append("text", text); // テキストも追加
     for (let [key, value] of formData.entries()) {
       console.log(key, value);

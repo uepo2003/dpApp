@@ -17,7 +17,8 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 const Other = () => {
-  const [followers, setFollower] = useState([]);
+  const [followers, setFollower] = useState<Array<{id: string, image: string, username: string}>>([]);
+  // const [followers, setFollower] = useState([]);
   useEffect(() => {
     axios
       .get("http://localhost:8080/followers", { withCredentials: true })
@@ -32,7 +33,7 @@ const Other = () => {
         {followers.map((follower) => (
           <Card maxW="md" key={follower.id}>
             <CardHeader>
-              <Flex spacing="4">
+              <Flex gap="4">
                 <Flex flex="1" gap="4" alignItems="center" flexWrap="wrap">
                   <Avatar name="Segun Adebayo" src={follower.image} />
 

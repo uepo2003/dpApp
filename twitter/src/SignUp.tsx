@@ -1,37 +1,42 @@
 import { useState, useRef } from "react";
 import { Button, Stack, Input } from "@chakra-ui/react";
-import { AddIcon, EmailIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [file, setFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onUsernameChange = (event) => {
+  const onUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(event.target.value);
   };
 
-  const onEmailChange = (event) => {
+  const onEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value);
   };
 
-  const onPasswordChange = (event) => {
+  const onPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value);
   };
-
   const handleButtonClick = () => {
-    fileInputRef.current.click();
-  };
-  const onFileChange = (event) => {
-    setFile(event.target.files[0]);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setFile(event.target.files[0]);
+    }
   };
 
   async function handleSignUp() {
     const formData = new FormData();
-    formData.append("file", file); // ファイルを追加
+    if (file) {
+      formData.append("file", file); // ファイルを追加
+    }
     formData.append("username", username); // テキストも追加
     formData.append("email", email);
     formData.append("password", password);
