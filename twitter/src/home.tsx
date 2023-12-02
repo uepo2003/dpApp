@@ -27,17 +27,17 @@ import {
 import {
   EmailIcon,
   AddIcon,
-  WarningIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
   StarIcon,
 } from "@chakra-ui/icons";
 import { FaHeart } from "react-icons/fa";
 import { FaList, FaUser, FaEllipsisH, FaFeatherAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import dpLogo from "./assets/DP.png";
 function Home() {
-  const navigate = useNavigate();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [posts, setPosts] = useState<Array<{postId: string, content: string, url: string, image: string, count: string}>>([]);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
@@ -65,14 +65,18 @@ function Home() {
     formData.append("text", text); // テキストも追加
     axios.post("http://localhost:8080/edits", formData)
     .then(response => {
+    
       if (response.status === 200) {
         console.log('Success:', response.data);
-        navigate("/");
-       
+     
       }
     })
     .catch(error => {
       console.error('Error in upload:', error);
+    })
+    .finally(() => {
+      onClose();
+      window.location.reload(); // モーダルを閉じる
     });
   }
 
@@ -81,6 +85,7 @@ function Home() {
     axios.delete(`http://localhost:8080/delete?ID=${ID}`)
       .then((response: any) => {
        console.log(response);
+       window.location.reload();
       });
   }
 
@@ -88,6 +93,7 @@ function Home() {
    try{ 
     const response = axios.get(`http://localhost:8080/likes?ID=${postId}`, { withCredentials: true })
      console.log(response);
+     window.location.reload();
     }catch (error) {
       console.error(error);
     }
@@ -99,6 +105,7 @@ function Home() {
       .then((response: any) => {
         console.log(response.data.success);
         setValue(response.data.success);
+        window.location.reload();
         console.log(value);
       });
   };
@@ -226,14 +233,14 @@ function Home() {
               variant="ghost"
               mt="30"
             />
-            <Link href="/Other">
+            
               <IconButton
                 aria-label="Profile"
                 icon={<Icon as={FaUser} w={30} h={30} />}
                 variant="ghost"
                 mt="30"
               />
-            </Link>
+           
             <IconButton
               aria-label="More"
               icon={<Icon as={FaEllipsisH} w={30} h={30} />}
@@ -270,12 +277,22 @@ function Home() {
             >
               <Link href="/SignUp">SignUp</Link>
             </Button>
+
+            <Button
+              colorScheme="twitter"
+              leftIcon={<Icon as={FaFeatherAlt} />}
+              mt="30"
+              w="100%"
+            >
+              <Link href="/Other">Followings</Link>
+            </Button>
           </Flex>
         </Box>
 
         <Card overflow="auto" h="100vh" w="1000px">
           <Flex justify="center" align="center" direction="column">
-            {posts.map((post) => (
+        
+            {posts && posts.map((post) => (
               <Card key={post.postId} mb="10">
                 <CardHeader>
                   <Flex gap="4" alignItems="center">
@@ -304,7 +321,7 @@ function Home() {
                     },
                   }}
                 >
-                  <Button flex="1" variant="ghost" leftIcon={<WarningIcon />}>
+                  <Button flex="1" variant="ghost" leftIcon={<ArrowLeftIcon />}>
                   </Button>
                   <Button
                     flex="1"
@@ -317,7 +334,7 @@ function Home() {
                   <Button
                     flex="1"
                     variant="ghost"
-                    leftIcon={<WarningIcon />}
+                    leftIcon={<ArrowRightIcon/>}
                     // onClick={() => updateCounter(post.userId, +1)}
                   >
                   
@@ -354,7 +371,7 @@ function Home() {
         　　　　　　　　　　変更
       　　　　　　　　　　</Button>
                       </ModalBody>
-                      <Button colorScheme='blue' mr={100} ml={5} mb={2} onClick={onClose}　height="40px" width="100px">
+                      <Button colorScheme='twitter' mr={100} ml={5} mb={2} onClick={onClose}　height="40px" width="100px">
                         Close
                       </Button>
                     </ModalContent>
@@ -363,8 +380,9 @@ function Home() {
               </Card>
             ))}
           </Flex>
+                
         </Card>
-
+    
         <Box w="280px" borderLeft="1px" borderColor="gray.200">
           <Box p="3">
             <Heading size="sm">Trends for you</Heading>
@@ -401,7 +419,7 @@ function Home() {
             maxHeight="400px"
           >
             <Heading size="sm">Who to follow</Heading>
-            {users.map((user) => (
+            {users && users.map((user) => (
               <Flex key={user.id} mt="3" alignItems="center">
                 <Avatar name="Dan Abrahmov" src={user.image} />
                 <Box ml="3">

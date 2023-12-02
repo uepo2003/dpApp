@@ -11,6 +11,7 @@ import {
   CardBody,
   Image,
   CardFooter,
+  Link,
 } from "@chakra-ui/react";
 import { PhoneIcon, AddIcon } from "@chakra-ui/icons";
 import axios from "axios";
@@ -29,6 +30,10 @@ const Other = () => {
   }, []);
   return (
     <>
+    <Box fontSize="2xl" fontWeight="bold">自分がフォローしているユーザー</Box>
+    <Button colorScheme="twitter" mt="30" w="100%">
+      <Link href="/">戻る</Link>
+    </Button>
       <Flex justify="center" align="center" h="100vh">
         {followers.map((follower) => (
           <Card maxW="md" key={follower.id}>

@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Button, Stack, Input } from "@chakra-ui/react";
+import { Button, Stack, Input, Link } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 const SignUp = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,7 +47,10 @@ const SignUp = () => {
         "http://localhost:8080/signups",
         formData,
       );
-      console.log(response.data);
+      if (response.status === 200) {
+        navigate("/");
+      }
+      
     } catch (error) {
       console.error("Error in signup: ", error);
     }
@@ -79,8 +83,11 @@ const SignUp = () => {
       >
         画像を追加
       </Button>
-      <Button onClick={handleSignUp} colorScheme="blue">
+      <Button onClick={handleSignUp} colorScheme="twitter">
         登録
+      </Button>
+      <Button  colorScheme="twitter">
+      <Link href="/">ホームに戻る</Link>
       </Button>
     </Stack>
   );

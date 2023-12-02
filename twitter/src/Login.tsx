@@ -7,6 +7,7 @@ import {
   Stack,
   Heading,
   useColorModeValue,
+  Link,
 } from "@chakra-ui/react";
 
 import { useState } from "react";
@@ -37,6 +38,7 @@ function Login() {
       }
     } catch (error) {
       console.log("niko", error);
+      window.alert("メールアドレスまたはパスワードが違います");
     }
     setEmail("");
     setPassword("");
@@ -67,14 +69,23 @@ function Login() {
           </FormControl>
 
           <Button
-            bg={"blue.400"}
+            bg={"twitter.400"}
             color={"white"}
-            _hover={{ bg: "blue.500" }}
+            _hover={{ bg: "twitter.500" }}
             type="submit"
             onClick={handleLogin}
             mt="30"
           >
             ログインする
+          </Button>
+
+          <Button
+            bg={"twitter.400"}
+            color={"white"}
+            _hover={{ bg: "twitter.500" }}
+            mt="30"
+          >
+            <Link href="/">ホームに戻る</Link>
           </Button>
         </Stack>
       </Box>

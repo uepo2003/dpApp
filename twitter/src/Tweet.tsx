@@ -3,17 +3,18 @@ import {
   Button,
   Stack,
   Textarea,
-  Image,
   Input,
+  Link,
   // IconButton,
 } from "@chakra-ui/react";
 import { AddIcon, EmailIcon } from "@chakra-ui/icons";
 import axios from "axios";
-
-const UpLoad = () => {
+import { useNavigate } from "react-router-dom";
+const Tweet = () => {
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
-  const [upFile, setUpFile] = useState(null);
+ 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   
@@ -49,10 +50,13 @@ const UpLoad = () => {
         { withCredentials: true },
       );
 
-      console.log(response.data);
-      setUpFile(response.data.fileUrl); // ファイルURLを状態にセット
+      if (response.status === 200) {
+        navigate("/");
+      }
+ 
     } catch (error) {
       console.error("Error in upload: ", error);
+      window.alert("ツイートするにはログインしてください");
     }
   }
 
@@ -80,9 +84,13 @@ const UpLoad = () => {
       >
         送信
       </Button>
-      {upFile && <Image src={upFile} alt="アップロードされたファイル" />}
+      <Button
+        colorScheme="twitter"
+      >
+      <Link href="/">ホームに戻る</Link>
+      </Button>
     </Stack>
   );
 };
 
-export default UpLoad;
+export default Tweet;

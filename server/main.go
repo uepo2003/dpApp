@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-   
 	"cloud.google.com/go/storage"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -17,6 +16,7 @@ import (
 	"golang.org/x/oauth2/google"
 	// "golang.org/x/text/number"
 	"google.golang.org/api/option"
+	"github.com/joho/godotenv"
 )
 
  
@@ -29,6 +29,12 @@ type SignUp struct {
 	Image string   `json:"image"`
 }
 
+type Other struct {
+	ID       string `json:"id"`
+	
+	UserName string   `json:"username"`
+	Image string   `json:"image"`
+}
 
 type User struct {
 	Email    string `json:"email"`
@@ -66,7 +72,7 @@ type Posts struct {
 	UserID  string `json:"userId"`
 	Content string `json:"content"`
 	Url string `json:"url"`
-	Image sql.NullString  `json:"image"`
+	Image string `json:"image"`
 	Count int  `json:"count"`
 }
 
@@ -77,6 +83,27 @@ type ID struct {
 type Cookie struct {
 	Name  string
 	Value string
+}
+
+func db() (*sql.DB, error) {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println(err)
+	}
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName))
+	if err != nil {
+		return nil, err
+	}
+
+	// sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	fmt.Println("Connected to the database")
+	return db, nil
 }
 
 func createSignUp(w http.ResponseWriter, r *http.Request) {
@@ -142,10 +169,10 @@ func createSignUp(w http.ResponseWriter, r *http.Request) {
 		Expires:        time.Now().Add(360 * time.Minute),
 	})
 
-
+	// sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
 
 	fmt.Println("niko")
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -169,7 +196,7 @@ func createSignUp(w http.ResponseWriter, r *http.Request) {
 
 func IsFollowing(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -201,7 +228,7 @@ func IsFollowing(w http.ResponseWriter, r *http.Request) {
 
 func getPosts(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -243,7 +270,7 @@ func createLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+		db, err := db()
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -302,7 +329,7 @@ func createFollows(w http.ResponseWriter, r *http.Request) {
 	v := cookie.Value
 	fmt.Println(v)
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -323,7 +350,7 @@ func unFollows(w http.ResponseWriter, r *http.Request) {
 	
 	fmt.Println("Unfollow User ID: ", nipo.ID)
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println("Database connection failed: ", err)
 		return
@@ -341,20 +368,20 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	ID := r.URL.Query().Get("ID")
 
     fmt.Println(ID);
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println("Database connection failed: ", err)
 		return
 	}
 	defer db.Close()
-
+    db.Exec("DELETE FROM likes WHERE tweet_id = ?", ID)
 	db.Exec("DELETE FROM posts WHERE postId = ?", ID)
-
+	
 	fmt.Println("Delete successful")
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -393,12 +420,13 @@ func logout(w http.ResponseWriter, r *http.Request) {
 
 	value := cookie.Value
 	fmt.Println(value)
-
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+    
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	db.Exec("DELETE FROM follows WHERE follower_id = ?", value)
 	_, err = db.Exec("UPDATE users SET IsLoggedIn = ? WHERE ID = ?", false, value)
 	if err != nil {
 		fmt.Println(err)
@@ -441,7 +469,7 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) {
 	value := cookie.Value
 	fmt.Println(value)
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -466,7 +494,7 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func Follower(w http.ResponseWriter, r *http.Request) { 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -478,35 +506,30 @@ func Follower(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vpo := cookie.Value
-
-	stmt, err := db.Prepare("SELECT u.* FROM follows f JOIN users u ON f.followed_id = u.ID WHERE f.follower_id = ?")
+    fmt.Println(vpo)
+	rows, err := db.Query("SELECT u.ID, u.username, u.image FROM follows f JOIN users u ON f.followed_id = u.ID WHERE f.follower_id = ?", vpo)
+	fmt.Println(rows)
 	if err != nil {
-		panic(err.Error()) 
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query(vpo)
-	if err != nil {
-		panic(err.Error()) 
+		fmt.Println(err)
 	}
 	defer rows.Close()
 
-	var results []SignUp
+	var followings []Other
 	for rows.Next() {
-		var r SignUp
-		if err := rows.Scan(&r.ID, &r.Email, &r.Password, &r.IsLoggedIn, &r.UserName, &r.Image); err != nil {
+		var f Other
+		err := rows.Scan(&f.ID, &f.UserName, &f.Image)
+		if err != nil {
 			fmt.Println(err)
-			continue
 		}
-		results = append(results, r)
+		followings = append(followings, f)
+		fmt.Println(followings, "nikoniko")
 	}
 
 	if err = rows.Err(); err != nil {
 		fmt.Println(err)
-		return
 	}
 
-	if err := json.NewEncoder(w).Encode(results); err != nil {
+	if err := json.NewEncoder(w).Encode(followings); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -560,7 +583,7 @@ func edit(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Text: ", text)
 	
     fmt.Println(id)
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -654,6 +677,11 @@ func upLoad(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Cookie: ", err)
 	}
 
+	if cookie.Value == "" {
+		http.Error(w, "Cookie error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	vo := cookie.Value
 	fmt.Println(vo)
 
@@ -661,7 +689,7 @@ func upLoad(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Text: ", text)
 	
 
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -758,7 +786,7 @@ func likeTweet(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(ID)
 
 	
-	db, err := sql.Open("mysql", "kairiueno:Thousand1475@tcp(localhost:3306)/Twitter")
+	db, err := db()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -811,6 +839,7 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	fmt.Println("Connected to the database")
 	http.HandleFunc("/get/users", enableCORS(getUsers))
 	http.HandleFunc("/follows", enableCORS(createFollows))
 	http.HandleFunc("/unfollows", enableCORS(unFollows))
@@ -819,7 +848,6 @@ func main() {
 	http.HandleFunc("/upLoads", enableCORS(upLoad))
 	http.HandleFunc("/edits", enableCORS(edit))
 	http.HandleFunc("/followings", enableCORS(IsFollowing))
-	// http.HandleFunc("/posts", enableCORS(createPost))
 	http.HandleFunc("/logouts", enableCORS(logout))
 	http.HandleFunc("/logins", enableCORS(createLogin))
 	http.HandleFunc("/signups", enableCORS(createSignUp))
