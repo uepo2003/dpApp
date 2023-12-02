@@ -13,8 +13,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2/google"
-	// "golang.org/x/text/number"
+	"golang.org/x/oauth2/google" 
 	"google.golang.org/api/option"
 	"github.com/joho/godotenv"
 )
